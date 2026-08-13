@@ -68,3 +68,17 @@ npm run lint
 npm run typecheck
 npm run build
 ```
+
+## デモGTFSのインポート
+
+リポジトリ内の架空デモGTFSを、ローカルSQLiteへ取り込みます。
+
+```bash
+npm run gtfs:import
+```
+
+既定の入力は `data/gtfs/demo/`、出力は `data/railshot.sqlite` です。出力DBは生成物としてGit管理対象外です。別のパスを使う場合は、入力ディレクトリ、出力DBの順に指定できます。
+
+```bash
+npm run gtfs:import -- path/to/gtfs path/to/output.sqlite
+```

@@ -13,6 +13,11 @@
 # production
 /build
 
+# generated local data
+/data/*.sqlite
+/data/*.sqlite-shm
+/data/*.sqlite-wal
+
 # local environment files (keep only the empty template)
 .env*
 !.env.example

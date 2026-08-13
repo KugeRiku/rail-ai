@@ -1,0 +1,2 @@
+route_id,route_short_name,route_long_name,route_type,route_color
+DEMO_LINE,RS,レールショット・デモライン,2,18866F
