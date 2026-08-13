@@ -1,0 +1,124 @@
+.panel {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 26px 28px 24px;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 100% 0, rgba(66, 160, 133, 0.14), transparent 34%),
+    var(--panel);
+  color: #f2f8f6;
+  box-shadow: -14px 0 32px rgba(17, 36, 31, 0.08);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.eyebrow {
+  color: #b7cbc5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.status {
+  padding: 5px 8px;
+  border: 1px solid rgba(85, 212, 181, 0.24);
+  border-radius: 999px;
+  background: rgba(85, 212, 181, 0.08);
+  color: #75e1c7;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.emptyState {
+  align-self: center;
+  max-width: 340px;
+  padding: 46px 0;
+}
+
+.pin {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(85, 212, 181, 0.28);
+  border-radius: 17px;
+  background: rgba(85, 212, 181, 0.08);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+.pin::before {
+  content: "";
+  width: 16px;
+  height: 20px;
+  border: 2px solid var(--accent);
+  border-radius: 10px 10px 12px 12px;
+  transform: rotate(45deg);
+}
+
+.pin span {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.step {
+  margin-top: 28px;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+}
+
+.emptyState h1 {
+  margin-top: 10px;
+  font-size: clamp(1.55rem, 2.2vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.25;
+}
+
+.description {
+  margin-top: 15px;
+  color: var(--panel-muted);
+  font-size: 0.88rem;
+  line-height: 1.8;
+}
+
+.notice {
+  display: grid;
+  grid-template-columns: 3px 1fr;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.noticeLine {
+  border-radius: 999px;
+  background: #3c9c81;
+}
+
+.notice p {
+  color: #93aaa3;
+  font-size: 0.7rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 820px) {
+  .panel {
+    min-height: 420px;
+    padding: 24px;
+  }
+}

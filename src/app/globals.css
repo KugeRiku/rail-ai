@@ -1,0 +1,36 @@
+:root {
+  --background: #eef3f1;
+  --foreground: #10201b;
+  --panel: #10251f;
+  --panel-muted: #abc3bb;
+  --accent: #55d4b5;
+  --border: rgba(16, 37, 31, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    Inter, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
