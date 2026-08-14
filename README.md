@@ -67,6 +67,7 @@ ORCAROUTER_API_KEY=your_api_key_here
 - 列車詳細タイムライン、選択地点の推定通過時刻、選択shapeの地図強調
 - `GET /api/shooting-spots`による承認済み撮影候補地点の取得
 - 承認済み撮影地点3件と、初期非表示の地図マーカー切替
+- `POST /api/planner/search`による車両・列車、営業日、時間帯、徒歩条件の決定的な撮影プラン検索
 - 路線一覧・路線shape API
 - `MapView`、`SidePanel`、`AppLayout` のコンポーネント分割
 - 地図とページの最低限のLoading / Error表示

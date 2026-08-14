@@ -1,5 +1,7 @@
 trip_id,vehicle_series,display_name,confidence
 OUT_001,Series-A,特急車両A,confirmed
 OUT_002,Series-A,特急車両A,expected
+OUT_003,Series-A,特急車両A,confirmed
+OUT_004,Series-A,特急車両A,expected
 IN_001,Series-B,通勤車両B,confirmed
 IN_003,,,unknown
