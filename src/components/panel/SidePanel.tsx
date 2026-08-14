@@ -4,6 +4,7 @@ import styles from "./SidePanel.module.css";
 
 type SidePanelProps = {
   selection: SelectedRailPoint | null;
+  onTripShapeChange: (shapeId: string | null) => void;
 };
 
 function formatDistance(distanceMeters: number): string {
@@ -12,7 +13,7 @@ function formatDistance(distanceMeters: number): string {
     : `${Math.round(distanceMeters)} m`;
 }
 
-export function SidePanel({ selection }: SidePanelProps) {
+export function SidePanel({ selection, onTripShapeChange }: SidePanelProps) {
   return (
     <aside className={styles.panel} aria-labelledby="side-panel-title">
       <div className={styles.panelHeader}>
@@ -50,7 +51,11 @@ export function SidePanel({ selection }: SidePanelProps) {
               <dd>{formatDistance(selection.totalShapeDistance)}</dd>
             </div>
           </dl>
-          <PassageSearch selection={selection} />
+          <PassageSearch
+            key={`${selection.shapeId}:${selection.latitude}:${selection.longitude}`}
+            selection={selection}
+            onTripShapeChange={onTripShapeChange}
+          />
         </div>
       ) : (
         <div className={styles.emptyState}>

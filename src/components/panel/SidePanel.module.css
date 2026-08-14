@@ -204,6 +204,11 @@
 }
 
 .passageList li {
+  min-width: 0;
+}
+
+.passageButton {
+  width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -212,6 +217,19 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.045);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.passageButton:hover {
+  border-color: rgba(85, 212, 181, 0.28);
+  background: rgba(85, 212, 181, 0.08);
+}
+
+.passageButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .passageList time {
@@ -251,6 +269,147 @@
   color: #ffd471;
   font-size: 0.58rem;
   font-weight: 800;
+}
+
+.tripDetail {
+  margin-top: 28px;
+}
+
+.backButton {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #dbe9e4;
+  font-size: 0.7rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.backButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tripDetail .step {
+  margin-top: 24px;
+}
+
+.tripDetail h2 {
+  margin-top: 8px;
+  font-size: 1.45rem;
+  letter-spacing: -0.035em;
+}
+
+.tripMeta {
+  margin-top: 7px;
+  color: #93aaa3;
+  font-size: 0.7rem;
+}
+
+.tripTimeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin-top: 28px;
+  list-style: none;
+}
+
+.tripTimeline::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 8px;
+  width: 2px;
+  background: rgba(117, 225, 199, 0.22);
+}
+
+.stationEvent,
+.selectedPointEvent {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 9px 0;
+}
+
+.timelineMarker {
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  border: 2px solid #75e1c7;
+  border-radius: 50%;
+  background: var(--panel);
+}
+
+.stationEvent strong,
+.selectedPointEvent strong {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.stopId,
+.selectedPointEvent div span {
+  display: block;
+  margin-top: 3px;
+  color: #829991;
+  font-size: 0.6rem;
+}
+
+.stopTimes {
+  display: grid;
+  gap: 2px;
+  color: #f2f8f6;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.69rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.selectedPointEvent {
+  margin: 3px 0;
+  padding: 11px 10px 11px 0;
+  border: 1px solid rgba(255, 176, 0, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 176, 0, 0.08);
+}
+
+.cameraMarker {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffb000;
+  color: #573d00;
+  font-size: 0.45rem;
+}
+
+.selectedPointEvent time {
+  color: #ffd471;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.estimateNotice {
+  margin-top: 22px;
+  padding: 13px;
+  border-radius: 9px;
+  background: rgba(255, 176, 0, 0.07);
+  color: #c4b68f;
+  font-size: 0.66rem;
+  line-height: 1.65;
 }
 
 .pin {

@@ -20,6 +20,7 @@ type MapStatus = "loading" | "ready" | "error";
 type RoutesResponse = { routes: RouteSummary[] };
 
 type MapViewProps = {
+  highlightedShapeId: string | null;
   onSelection: (selection: SelectedRailPoint) => void;
 };
 
@@ -101,6 +102,18 @@ async function loadRailwayData(
       "line-opacity": 0,
     },
   });
+  map.addLayer({
+    id: "gtfs-selected-trip",
+    type: "line",
+    source: "gtfs-route-shapes",
+    filter: ["==", ["get", "shapeId"], ""],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#ffb000",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 6, 15, 10],
+      "line-opacity": 0.94,
+    },
+  });
 
   map.addSource("gtfs-stops", {
     type: "geojson",
@@ -167,8 +180,9 @@ async function loadRailwayData(
   };
 }
 
-export function MapView({ onSelection }: MapViewProps) {
+export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
   const [status, setStatus] = useState<MapStatus>("loading");
   const [retryKey, setRetryKey] = useState(0);
   const [mapSummary, setMapSummary] = useState("路線データを準備中");
@@ -198,6 +212,7 @@ export function MapView({ onSelection }: MapViewProps) {
         maxZoom: mapConfig.maxZoom,
         attributionControl: {},
       });
+      mapRef.current = map;
 
       const handleLoad = async () => {
         if (!isActive || hasSettled) {
@@ -347,6 +362,7 @@ export function MapView({ onSelection }: MapViewProps) {
         map?.off("load", handleLoad);
         map?.off("error", handleError);
         map?.remove();
+        mapRef.current = null;
       };
     } catch (error) {
       console.error("MapLibre initialization failed", error);
@@ -364,6 +380,19 @@ export function MapView({ onSelection }: MapViewProps) {
       };
     }
   }, [onSelection, retryKey]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getLayer("gtfs-selected-trip")) {
+      return;
+    }
+
+    map.setFilter("gtfs-selected-trip", [
+      "==",
+      ["get", "shapeId"],
+      highlightedShapeId ?? "",
+    ]);
+  }, [highlightedShapeId, status]);
 
   const retry = () => {
     setStatus("loading");

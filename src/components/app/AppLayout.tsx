@@ -8,8 +8,15 @@ import styles from "./AppLayout.module.css";
 
 export function AppLayout() {
   const [selection, setSelection] = useState<SelectedRailPoint | null>(null);
+  const [highlightedShapeId, setHighlightedShapeId] = useState<string | null>(
+    null,
+  );
   const handleSelection = useCallback((point: SelectedRailPoint) => {
     setSelection(point);
+    setHighlightedShapeId(null);
+  }, []);
+  const handleTripShapeChange = useCallback((shapeId: string | null) => {
+    setHighlightedShapeId(shapeId);
   }, []);
 
   return (
@@ -29,9 +36,15 @@ export function AppLayout() {
 
       <div className={styles.workspace}>
         <section className={styles.mapArea} aria-label="鉄道路線マップ">
-          <MapView onSelection={handleSelection} />
+          <MapView
+            highlightedShapeId={highlightedShapeId}
+            onSelection={handleSelection}
+          />
         </section>
-        <SidePanel selection={selection} />
+        <SidePanel
+          selection={selection}
+          onTripShapeChange={handleTripShapeChange}
+        />
       </div>
     </main>
   );

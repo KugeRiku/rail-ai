@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import type { SelectedRailPoint } from "@/domain/geo/snap-to-shape";
 import type { PassageListItem } from "@/domain/passages/search-passages";
+import { TripDetailPanel } from "./TripDetailPanel";
 import styles from "./SidePanel.module.css";
 
 type PassageSearchProps = {
   selection: SelectedRailPoint;
+  onTripShapeChange: (shapeId: string | null) => void;
 };
 
 type Filters = {
@@ -23,11 +25,16 @@ const INITIAL_FILTERS: Filters = {
   endTime: "26:00",
 };
 
-export function PassageSearch({ selection }: PassageSearchProps) {
+export function PassageSearch({
+  selection,
+  onTripShapeChange,
+}: PassageSearchProps) {
   const [draftFilters, setDraftFilters] = useState(INITIAL_FILTERS);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [status, setStatus] = useState<SearchStatus>("loading");
   const [passages, setPassages] = useState<PassageListItem[]>([]);
+  const [selectedPassage, setSelectedPassage] =
+    useState<PassageListItem | null>(null);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -71,6 +78,18 @@ export function PassageSearch({ selection }: PassageSearchProps) {
     void loadPassages();
     return () => abortController.abort();
   }, [filters, selection]);
+
+  if (selectedPassage) {
+    return (
+      <TripDetailPanel
+        passage={selectedPassage}
+        onBack={() => {
+          setSelectedPassage(null);
+          onTripShapeChange(null);
+        }}
+      />
+    );
+  }
 
   return (
     <section className={styles.passageSection} aria-labelledby="passage-title">
@@ -159,14 +178,23 @@ export function PassageSearch({ selection }: PassageSearchProps) {
         <ol className={styles.passageList}>
           {passages.map((passage) => (
             <li key={passage.tripId}>
-              <time>{passage.estimatedTime}ごろ</time>
-              <div>
-                <strong>{passage.headsign}方面</strong>
-                <span>
-                  {passage.routeName} · {passage.tripId}
-                </span>
-              </div>
-              <span className={styles.estimateBadge}>推定</span>
+              <button
+                type="button"
+                className={styles.passageButton}
+                onClick={() => {
+                  setSelectedPassage(passage);
+                  onTripShapeChange(passage.shapeId);
+                }}
+              >
+                <time>{passage.estimatedTime}ごろ</time>
+                <div>
+                  <strong>{passage.headsign}方面</strong>
+                  <span>
+                    {passage.routeName} · {passage.tripId}
+                  </span>
+                </div>
+                <span className={styles.estimateBadge}>推定</span>
+              </button>
             </li>
           ))}
         </ol>

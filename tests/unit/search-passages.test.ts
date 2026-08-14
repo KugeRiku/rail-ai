@@ -86,6 +86,8 @@ describe("searchPassages", () => {
         estimatedSeconds: 43_500,
         estimatedTime: "12:05",
         isEstimated: true,
+        previousStopId: "STOP_A",
+        nextStopId: "STOP_B",
       },
     ]);
   });

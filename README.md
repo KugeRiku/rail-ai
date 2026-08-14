@@ -63,12 +63,14 @@ ORCAROUTER_API_KEY=your_api_key_here
 - `shape_dist_traveled`優先・欠損時の駅座標投影フォールバック
 - `POST /api/passages`による営業日・時間帯別の通過列車検索
 - 日付と検索時間帯を変更できる通過列車一覧パネル
+- `GET /api/trips/[tripId]`による列車・路線・全駅時刻の取得
+- 列車詳細タイムライン、選択地点の推定通過時刻、選択shapeの地図強調
 - 路線一覧・路線shape API
 - `MapView`、`SidePanel`、`AppLayout` のコンポーネント分割
 - 地図とページの最低限のLoading / Error表示
 - 狭い画面で縦並びになる最低限のレスポンシブ対応
 
-列車詳細、AI撮影プランナー、OrcaRouter API呼び出しは未実装です。
+AI撮影プランナー、OrcaRouter API呼び出しは未実装です。
 
 ## 品質確認
 

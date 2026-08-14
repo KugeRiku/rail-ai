@@ -28,6 +28,8 @@ export type PassageListItem = {
   estimatedSeconds: number;
   estimatedTime: string;
   isEstimated: true;
+  previousStopId: string;
+  nextStopId: string;
 };
 
 type PassageSearchInput = {
@@ -101,6 +103,8 @@ export function searchPassages({
       estimatedSeconds: estimate.estimatedSeconds,
       estimatedTime: formatServiceTimeHHMM(estimate.estimatedSeconds),
       isEstimated: true,
+      previousStopId: estimate.previousStopId,
+      nextStopId: estimate.nextStopId,
     });
   }
 
