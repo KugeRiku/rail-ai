@@ -65,6 +65,8 @@ ORCAROUTER_API_KEY=your_api_key_here
 - 日付と検索時間帯を変更できる通過列車一覧パネル
 - `GET /api/trips/[tripId]`による列車・路線・全駅時刻の取得
 - 列車詳細タイムライン、選択地点の推定通過時刻、選択shapeの地図強調
+- `GET /api/shooting-spots`による承認済み撮影候補地点の取得
+- 承認済み撮影地点3件と、初期非表示の地図マーカー切替
 - 路線一覧・路線shape API
 - `MapView`、`SidePanel`、`AppLayout` のコンポーネント分割
 - 地図とページの最低限のLoading / Error表示
@@ -88,8 +90,8 @@ npm run build
 npm run gtfs:import
 ```
 
-既定の入力は `data/gtfs/demo/`、出力は `data/railshot.sqlite` です。出力DBは生成物としてGit管理対象外です。別のパスを使う場合は、入力ディレクトリ、出力DBの順に指定できます。
+既定の入力は `data/gtfs/demo/` と `data/shooting_spots.json`、出力は `data/railshot.sqlite` です。出力DBは生成物としてGit管理対象外です。別のパスを使う場合は、入力ディレクトリ、出力DB、撮影地点JSONの順に指定できます。
 
 ```bash
-npm run gtfs:import -- path/to/gtfs path/to/output.sqlite
+npm run gtfs:import -- path/to/gtfs path/to/output.sqlite path/to/shooting_spots.json
 ```

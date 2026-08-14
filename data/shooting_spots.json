@@ -1,0 +1,35 @@
+[
+  {
+    "id": "SPOT_RIVERSIDE",
+    "name": "水辺プロムナード",
+    "latitude": 35.6894,
+    "longitude": 139.7406,
+    "nearestStation": "水辺駅",
+    "walkMinutes": 7,
+    "cameraBearing": 285,
+    "notes": "架空のデモ撮影地点。安全確認済みの公開歩道から撮影する想定です。",
+    "safetyStatus": "approved"
+  },
+  {
+    "id": "SPOT_GREEN_HILL",
+    "name": "緑丘展望歩道",
+    "latitude": 35.6971,
+    "longitude": 139.7165,
+    "nearestStation": "緑丘駅",
+    "walkMinutes": 9,
+    "cameraBearing": 110,
+    "notes": "架空のデモ撮影地点。歩道内に留まり、通行を妨げないでください。",
+    "safetyStatus": "approved"
+  },
+  {
+    "id": "SPOT_RIVERBANK_PARK",
+    "name": "川原公園デッキ",
+    "latitude": 35.7074,
+    "longitude": 139.6841,
+    "nearestStation": "川原駅",
+    "walkMinutes": 6,
+    "cameraBearing": 295,
+    "notes": "架空のデモ撮影地点。安全確認済みの公園デッキから撮影する想定です。",
+    "safetyStatus": "approved"
+  }
+]

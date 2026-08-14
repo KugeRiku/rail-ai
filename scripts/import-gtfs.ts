@@ -2,10 +2,12 @@ import Database from "better-sqlite3";
 import { parse } from "csv-parse/sync";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { z } from "zod";
 import { gtfsTimeToSeconds } from "../src/domain/gtfs/time";
 
 const DEFAULT_GTFS_DIRECTORY = "data/gtfs/demo";
 const DEFAULT_DATABASE_PATH = "data/railshot.sqlite";
+const DEFAULT_SHOOTING_SPOTS_PATH = "data/shooting_spots.json";
 const VEHICLE_ASSIGNMENTS_FILE = "vehicle_assignments.csv";
 const VEHICLE_ASSIGNMENT_HEADERS = [
   "trip_id",
@@ -13,6 +15,19 @@ const VEHICLE_ASSIGNMENT_HEADERS = [
   "display_name",
   "confidence",
 ] as const;
+
+const shootingSpotSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  nearestStation: z.string().min(1),
+  walkMinutes: z.number().int().nonnegative(),
+  cameraBearing: z.number().min(0).lt(360),
+  notes: z.string().min(1),
+  safetyStatus: z.enum(["approved", "pending", "rejected"]),
+});
+const shootingSpotsSchema = z.array(shootingSpotSchema);
 
 const REQUIRED_HEADERS = {
   "routes.txt": [
@@ -71,6 +86,7 @@ const SCHEMA_SQL = `
   DROP TABLE IF EXISTS stop_times;
   DROP TABLE IF EXISTS shape_points;
   DROP TABLE IF EXISTS vehicle_assignments;
+  DROP TABLE IF EXISTS shooting_spots;
   DROP TABLE IF EXISTS trips;
   DROP TABLE IF EXISTS stops;
   DROP TABLE IF EXISTS routes;
@@ -108,6 +124,18 @@ const SCHEMA_SQL = `
       confidence = 'unknown'
       OR (vehicle_series IS NOT NULL AND length(vehicle_series) > 0)
     )
+  ) STRICT;
+
+  CREATE TABLE shooting_spots (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    latitude REAL NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+    longitude REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+    nearest_station TEXT NOT NULL,
+    walk_minutes INTEGER NOT NULL CHECK (walk_minutes >= 0),
+    camera_bearing REAL NOT NULL CHECK (camera_bearing >= 0 AND camera_bearing < 360),
+    notes TEXT NOT NULL,
+    safety_status TEXT NOT NULL CHECK (safety_status IN ('approved', 'pending', 'rejected'))
   ) STRICT;
 
   CREATE TABLE shape_points (
@@ -227,6 +255,27 @@ function readVehicleAssignments(directory: string): CsvRow[] {
   return rows;
 }
 
+function readShootingSpots(filePath: string) {
+  if (!existsSync(filePath)) {
+    return [];
+  }
+
+  let input: unknown;
+  try {
+    input = JSON.parse(readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`Could not parse shooting spots file: ${filePath}`, {
+      cause: error,
+    });
+  }
+
+  const parsed = shootingSpotsSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new Error(`Invalid shooting spots data: ${z.prettifyError(parsed.error)}`);
+  }
+  return parsed.data;
+}
+
 function required(row: CsvRow, field: string, context: string): string {
   const value = row[field];
   if (value === undefined || value === "") {
@@ -260,7 +309,11 @@ function date(row: CsvRow, field: string, context: string): string {
   return value;
 }
 
-function importGtfs(gtfsDirectory: string, databasePath: string) {
+function importGtfs(
+  gtfsDirectory: string,
+  databasePath: string,
+  shootingSpotsPath: string,
+) {
   const files = Object.fromEntries(
     (Object.keys(REQUIRED_HEADERS) as GtfsFileName[]).map((fileName) => [
       fileName,
@@ -268,6 +321,7 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
     ]),
   ) as Record<GtfsFileName, CsvRow[]>;
   const vehicleAssignments = readVehicleAssignments(gtfsDirectory);
+  const shootingSpots = readShootingSpots(shootingSpotsPath);
 
   mkdirSync(dirname(databasePath), { recursive: true });
   const database = new Database(databasePath);
@@ -345,6 +399,33 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
           row.vehicle_series || null,
           row.display_name || null,
           confidence,
+        );
+      }
+
+      const insertShootingSpot = database.prepare(`
+        INSERT INTO shooting_spots (
+          id,
+          name,
+          latitude,
+          longitude,
+          nearest_station,
+          walk_minutes,
+          camera_bearing,
+          notes,
+          safety_status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const spot of shootingSpots) {
+        insertShootingSpot.run(
+          spot.id,
+          spot.name,
+          spot.latitude,
+          spot.longitude,
+          spot.nearestStation,
+          spot.walkMinutes,
+          spot.cameraBearing,
+          spot.notes,
+          spot.safetyStatus,
         );
       }
 
@@ -444,6 +525,7 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
         UNION ALL SELECT 'stops', COUNT(*) FROM stops
         UNION ALL SELECT 'trips', COUNT(*) FROM trips
         UNION ALL SELECT 'vehicle_assignments', COUNT(*) FROM vehicle_assignments
+        UNION ALL SELECT 'shooting_spots', COUNT(*) FROM shooting_spots
         UNION ALL SELECT 'stop_times', COUNT(*) FROM stop_times
         UNION ALL SELECT 'shape_points', COUNT(*) FROM shape_points
         UNION ALL SELECT 'service_calendars', COUNT(*) FROM service_calendars
@@ -462,9 +544,12 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
 
 const gtfsDirectory = resolve(process.argv[2] ?? DEFAULT_GTFS_DIRECTORY);
 const databasePath = resolve(process.argv[3] ?? DEFAULT_DATABASE_PATH);
+const shootingSpotsPath = resolve(
+  process.argv[4] ?? DEFAULT_SHOOTING_SPOTS_PATH,
+);
 
 try {
-  importGtfs(gtfsDirectory, databasePath);
+  importGtfs(gtfsDirectory, databasePath, shootingSpotsPath);
 } catch (error) {
   console.error("GTFS import failed:", error);
   process.exitCode = 1;

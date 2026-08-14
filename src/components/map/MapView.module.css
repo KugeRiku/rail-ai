@@ -42,6 +42,46 @@
   box-shadow: 0 0 0 4px rgba(49, 183, 146, 0.16);
 }
 
+.shootingSpotsToggle {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid rgba(16, 37, 31, 0.14);
+  border-radius: 9px;
+  background: rgba(250, 252, 251, 0.88);
+  color: #41594f;
+  box-shadow: 0 5px 18px rgba(22, 50, 42, 0.1);
+  font-size: 0.66rem;
+  font-weight: 750;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.shootingSpotsToggle span {
+  min-width: 19px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(244, 166, 42, 0.14);
+  color: #85550b;
+  text-align: center;
+}
+
+.shootingSpotsToggle:hover,
+.shootingSpotsToggle[aria-pressed="true"] {
+  border-color: rgba(208, 128, 10, 0.36);
+  background: rgba(255, 249, 237, 0.95);
+}
+
+.shootingSpotsToggle:focus-visible {
+  outline: 3px solid rgba(208, 128, 10, 0.25);
+  outline-offset: 3px;
+}
+
 .stateOverlay {
   position: absolute;
   z-index: 3;

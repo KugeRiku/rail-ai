@@ -13,11 +13,13 @@ import type {
   RouteMapData,
   RouteSummary,
 } from "@/domain/gtfs/map-data";
+import type { ShootingSpot } from "@/domain/shooting-spots/shooting-spot";
 import styles from "./MapView.module.css";
 
 type MapStatus = "loading" | "ready" | "error";
 
 type RoutesResponse = { routes: RouteSummary[] };
+type ShootingSpotsResponse = { shootingSpots: ShootingSpot[] };
 
 type MapViewProps = {
   highlightedShapeId: string | null;
@@ -180,12 +182,88 @@ async function loadRailwayData(
   };
 }
 
+async function loadShootingSpotsData(
+  map: maplibregl.Map,
+  signal: AbortSignal,
+): Promise<number> {
+  let shootingSpots: ShootingSpot[] = [];
+
+  try {
+    const response = await fetchJson<ShootingSpotsResponse>(
+      "/api/shooting-spots",
+      signal,
+    );
+    shootingSpots = response.shootingSpots;
+  } catch (error) {
+    if (!signal.aborted) {
+      console.error("Failed to load approved shooting spots", error);
+    }
+  }
+
+  map.addSource("approved-shooting-spots", {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: shootingSpots.map(
+        (spot): Feature<Point, ShootingSpot> => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [spot.longitude, spot.latitude],
+          },
+          properties: spot,
+        }),
+      ),
+    },
+  });
+  map.addLayer(
+    {
+      id: "approved-shooting-spots",
+      type: "circle",
+      source: "approved-shooting-spots",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4, 15, 7],
+        "circle-color": "#f4a62a",
+        "circle-opacity": 0.78,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5,
+      },
+    },
+    "selected-rail-point-halo",
+  );
+
+  map.on("click", "approved-shooting-spots", (event) => {
+    const properties = event.features?.[0]?.properties;
+    if (!properties || typeof properties.name !== "string") {
+      return;
+    }
+
+    new maplibregl.Popup({ closeButton: false, offset: 10 })
+      .setLngLat(event.lngLat)
+      .setText(
+        `${properties.name}｜最寄り：${properties.nearestStation}｜徒歩${properties.walkMinutes}分`,
+      )
+      .addTo(map);
+  });
+  map.on("mouseenter", "approved-shooting-spots", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+  map.on("mouseleave", "approved-shooting-spots", () => {
+    map.getCanvas().style.cursor = "";
+  });
+
+  return shootingSpots.length;
+}
+
 export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [status, setStatus] = useState<MapStatus>("loading");
   const [retryKey, setRetryKey] = useState(0);
   const [mapSummary, setMapSummary] = useState("路線データを準備中");
+  const [shootingSpotCount, setShootingSpotCount] = useState(0);
+  const [showShootingSpots, setShowShootingSpots] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -221,6 +299,10 @@ export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
 
         try {
           const { routeCount, stopCount, shapeFeatures } = await loadRailwayData(
+            map as maplibregl.Map,
+            abortController.signal,
+          );
+          const approvedSpotCount = await loadShootingSpotsData(
             map as maplibregl.Map,
             abortController.signal,
           );
@@ -315,6 +397,7 @@ export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
             },
           );
           setMapSummary(`${routeCount}路線・${stopCount}駅`);
+          setShootingSpotCount(approvedSpotCount);
           setStatus("ready");
         } catch (error) {
           if (abortController.signal.aborted || !isActive || hasSettled) {
@@ -394,8 +477,23 @@ export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
     ]);
   }, [highlightedShapeId, status]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getLayer("approved-shooting-spots")) {
+      return;
+    }
+
+    map.setLayoutProperty(
+      "approved-shooting-spots",
+      "visibility",
+      showShootingSpots ? "visible" : "none",
+    );
+  }, [showShootingSpots, status]);
+
   const retry = () => {
     setStatus("loading");
+    setShowShootingSpots(false);
+    setShootingSpotCount(0);
     setRetryKey((current) => current + 1);
   };
 
@@ -407,6 +505,18 @@ export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
         <span className={styles.mapLabelDot} />
         {mapSummary}
       </div>
+
+      {status === "ready" && shootingSpotCount > 0 && (
+        <button
+          type="button"
+          className={styles.shootingSpotsToggle}
+          aria-pressed={showShootingSpots}
+          onClick={() => setShowShootingSpots((current) => !current)}
+        >
+          撮影地点{showShootingSpots ? "を隠す" : "を表示"}
+          <span>{shootingSpotCount}</span>
+        </button>
+      )}
 
       {status === "loading" && (
         <div className={styles.stateOverlay} role="status" aria-live="polite">
