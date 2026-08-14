@@ -43,6 +43,50 @@
   padding: 46px 0;
 }
 
+.selection {
+  align-self: start;
+  padding: 38px 0;
+}
+
+.selection h1 {
+  margin-top: 10px;
+  font-size: clamp(1.55rem, 2.2vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+.details {
+  display: grid;
+  gap: 1px;
+  margin-top: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.details div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 12px;
+  padding: 12px 14px;
+  background: #17352c;
+}
+
+.details dt {
+  color: #93aaa3;
+  font-size: 0.7rem;
+}
+
+.details dd {
+  overflow-wrap: anywhere;
+  color: #f2f8f6;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: right;
+}
+
 .pin {
   position: relative;
   width: 52px;

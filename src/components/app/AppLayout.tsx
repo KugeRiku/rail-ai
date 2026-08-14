@@ -1,8 +1,17 @@
+"use client";
+
 import { MapView } from "@/components/map/MapView";
 import { SidePanel } from "@/components/panel/SidePanel";
+import type { SelectedRailPoint } from "@/domain/geo/snap-to-shape";
+import { useCallback, useState } from "react";
 import styles from "./AppLayout.module.css";
 
 export function AppLayout() {
+  const [selection, setSelection] = useState<SelectedRailPoint | null>(null);
+  const handleSelection = useCallback((point: SelectedRailPoint) => {
+    setSelection(point);
+  }, []);
+
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
@@ -20,9 +29,9 @@ export function AppLayout() {
 
       <div className={styles.workspace}>
         <section className={styles.mapArea} aria-label="鉄道路線マップ">
-          <MapView />
+          <MapView onSelection={handleSelection} />
         </section>
-        <SidePanel />
+        <SidePanel selection={selection} />
       </div>
     </main>
   );

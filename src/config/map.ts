@@ -44,4 +44,7 @@ export const mapConfig = {
   minZoom: 3,
   maxZoom: 18,
   loadTimeoutMs: 15_000,
+  routeBoundsPadding: 64,
+  routeBoundsMaxZoom: 14,
+  selectionMaxDistanceMeters: 250,
 } as const;

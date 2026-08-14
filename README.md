@@ -55,11 +55,16 @@ ORCAROUTER_API_KEY=your_api_key_here
 - Next.js App RouterとTypeScriptによるWebアプリ基盤
 - PC横長画面を優先した地図約70%・情報パネル約30%のレイアウト
 - MapLibre GL JSによる地図表示
+- SQLiteのGTFS shapeから生成した鉄道路線GeoJSONの表示
+- デモ路線全体への自動ズームと駅ポイント・駅名ポップアップ
+- 線路クリック時の最寄りLineString上へのスナップと選択マーカー表示
+- 選択したroute / shape、緯度経度、始点からの累積距離・shape全長の表示
+- 路線一覧・路線shape API
 - `MapView`、`SidePanel`、`AppLayout` のコンポーネント分割
 - 地図とページの最低限のLoading / Error表示
 - 狭い画面で縦並びになる最低限のレスポンシブ対応
 
-GTFS処理、鉄道路線表示、地点選択、列車検索、AI撮影プランナー、OrcaRouter API呼び出しは未実装です。
+通過時刻計算、列車検索、AI撮影プランナー、OrcaRouter API呼び出しは未実装です。
 
 ## 品質確認
 
