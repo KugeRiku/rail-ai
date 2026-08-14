@@ -18,3 +18,16 @@ export function gtfsTimeToSeconds(value: string): number {
 
   return hours * 60 * 60 + minutes * 60 + seconds;
 }
+
+/** Formats service-day elapsed seconds without wrapping hours at 24. */
+export function formatServiceTimeHHMM(elapsedSeconds: number): string {
+  if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < 0) {
+    throw new Error(`Invalid service-day elapsed seconds: ${elapsedSeconds}`);
+  }
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  const hours = Math.floor(elapsedMinutes / 60);
+  const minutes = elapsedMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}

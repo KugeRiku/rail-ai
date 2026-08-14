@@ -21,17 +21,23 @@ type ClickCoordinate = {
   longitude: number;
 };
 
-export function snapPointToShape(
+function isValidPosition(position: Position): boolean {
+  return (
+    position.length >= 2 &&
+    Number.isFinite(position[0]) &&
+    Number.isFinite(position[1])
+  );
+}
+
+export function projectPointToShape(
   coordinates: Position[],
   clickCoordinate: ClickCoordinate,
-  maxDistanceMeters: number,
 ): ShapeSelectionMeasurement | null {
   if (
     coordinates.length < 2 ||
+    !coordinates.every(isValidPosition) ||
     !Number.isFinite(clickCoordinate.latitude) ||
-    !Number.isFinite(clickCoordinate.longitude) ||
-    !Number.isFinite(maxDistanceMeters) ||
-    maxDistanceMeters < 0
+    !Number.isFinite(clickCoordinate.longitude)
   ) {
     return null;
   }
@@ -47,8 +53,7 @@ export function snapPointToShape(
 
   if (
     typeof distanceFromShape !== "number" ||
-    typeof distanceAlongShape !== "number" ||
-    distanceFromShape > maxDistanceMeters
+    typeof distanceAlongShape !== "number"
   ) {
     return null;
   }
@@ -60,4 +65,25 @@ export function snapPointToShape(
     totalShapeDistance: length(shape, { units: "meters" }),
     distanceFromShape,
   };
+}
+
+export function snapPointToShape(
+  coordinates: Position[],
+  clickCoordinate: ClickCoordinate,
+  maxDistanceMeters: number,
+): ShapeSelectionMeasurement | null {
+  if (
+    !Number.isFinite(maxDistanceMeters) ||
+    maxDistanceMeters < 0
+  ) {
+    return null;
+  }
+
+  const measurement = projectPointToShape(coordinates, clickCoordinate);
+
+  if (!measurement || measurement.distanceFromShape > maxDistanceMeters) {
+    return null;
+  }
+
+  return measurement;
 }
