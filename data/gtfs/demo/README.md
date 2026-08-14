@@ -7,5 +7,6 @@ RailShot AIのインポーターとテスト用に作成した架空のGTFS fixt
 - 12 trips（上下各6本）
 - 2 shapes（上下方向）
 - `OUT_NIGHT` はサービス日をまたぎ、終点到着が `25:10:00`
+- `vehicle_assignments.csv` は一部列車だけの架空の車両割当（確定・予定・不明）
 
 外部サイトから取得したデータは含みません。

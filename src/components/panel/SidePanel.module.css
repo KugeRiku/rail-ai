@@ -249,6 +249,13 @@
   display: block;
 }
 
+.passageList div .vehicleInfo {
+  margin-top: 5px;
+  color: #c4d7d1;
+  font-size: 0.65rem;
+  white-space: normal;
+}
+
 .passageList strong {
   font-size: 0.76rem;
 }

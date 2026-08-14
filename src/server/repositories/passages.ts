@@ -14,6 +14,9 @@ type TripRow = {
   shape_id: string;
   headsign: string;
   direction_id: number;
+  vehicle_series: string | null;
+  vehicle_display_name: string | null;
+  vehicle_confidence: "confirmed" | "expected" | "unknown" | null;
 };
 
 type ShapePointRow = {
@@ -68,9 +71,13 @@ export function getPassageCandidates(
          trips.service_id,
          trips.shape_id,
          trips.headsign,
-         trips.direction_id
+         trips.direction_id,
+         vehicle_assignments.vehicle_series,
+         vehicle_assignments.display_name AS vehicle_display_name,
+         vehicle_assignments.confidence AS vehicle_confidence
        FROM trips
        INNER JOIN routes ON routes.id = trips.route_id
+       LEFT JOIN vehicle_assignments ON vehicle_assignments.trip_id = trips.id
        WHERE ${byShape ? "trips.shape_id" : "trips.route_id"} = ?
        ORDER BY trips.id`,
     )
@@ -131,6 +138,14 @@ export function getPassageCandidates(
       directionId: trip.direction_id,
       shapeCoordinates,
       stopTimes,
+      vehicleAssignment: trip.vehicle_confidence
+        ? {
+            tripId: trip.trip_id,
+            vehicleSeries: trip.vehicle_series,
+            displayName: trip.vehicle_display_name,
+            confidence: trip.vehicle_confidence,
+          }
+        : null,
     };
   });
 }

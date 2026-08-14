@@ -12,6 +12,7 @@ beforeEach(() => {
   database.exec(`
     CREATE TABLE routes (id TEXT PRIMARY KEY, name TEXT);
     CREATE TABLE trips (id TEXT PRIMARY KEY, route_id TEXT, service_id TEXT, shape_id TEXT, headsign TEXT, direction_id INTEGER);
+    CREATE TABLE vehicle_assignments (trip_id TEXT PRIMARY KEY, vehicle_series TEXT, display_name TEXT, confidence TEXT);
     CREATE TABLE shape_points (shape_id TEXT, sequence INTEGER, latitude REAL, longitude REAL);
     CREATE TABLE stops (id TEXT PRIMARY KEY, latitude REAL, longitude REAL);
     CREATE TABLE stop_times (trip_id TEXT, stop_id TEXT, stop_sequence INTEGER, arrival_seconds INTEGER, departure_seconds INTEGER, shape_distance REAL);
@@ -21,6 +22,7 @@ beforeEach(() => {
     INSERT INTO routes VALUES ('ROUTE_A', 'テスト路線');
     INSERT INTO trips VALUES ('OUT', 'ROUTE_A', 'WEEKDAY', 'SHAPE_OUT', '終点', 0);
     INSERT INTO trips VALUES ('IN', 'ROUTE_A', 'WEEKDAY', 'SHAPE_IN', '始点', 1);
+    INSERT INTO vehicle_assignments VALUES ('OUT', 'Series-A', '特急車両A', 'confirmed');
     INSERT INTO shape_points VALUES ('SHAPE_OUT', 1, 35, 139);
     INSERT INTO shape_points VALUES ('SHAPE_OUT', 2, 35, 139.01);
     INSERT INTO shape_points VALUES ('SHAPE_IN', 1, 35, 139.01);
@@ -47,6 +49,16 @@ describe("passages repository", () => {
     expect(outbound?.stopTimes.map((stopTime) => stopTime.stopSequence)).toEqual([
       1, 2,
     ]);
+    expect(outbound?.vehicleAssignment).toEqual({
+      tripId: "OUT",
+      vehicleSeries: "Series-A",
+      displayName: "特急車両A",
+      confidence: "confirmed",
+    });
+    expect(
+      candidates.find((candidate) => candidate.tripId === "IN")
+        ?.vehicleAssignment,
+    ).toBeNull();
   });
 
   it("loads service calendars and exceptions", () => {

@@ -1,11 +1,18 @@
 import Database from "better-sqlite3";
 import { parse } from "csv-parse/sync";
-import { mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { gtfsTimeToSeconds } from "../src/domain/gtfs/time";
 
 const DEFAULT_GTFS_DIRECTORY = "data/gtfs/demo";
 const DEFAULT_DATABASE_PATH = "data/railshot.sqlite";
+const VEHICLE_ASSIGNMENTS_FILE = "vehicle_assignments.csv";
+const VEHICLE_ASSIGNMENT_HEADERS = [
+  "trip_id",
+  "vehicle_series",
+  "display_name",
+  "confidence",
+] as const;
 
 const REQUIRED_HEADERS = {
   "routes.txt": [
@@ -63,6 +70,7 @@ const SCHEMA_SQL = `
   DROP TABLE IF EXISTS service_calendars;
   DROP TABLE IF EXISTS stop_times;
   DROP TABLE IF EXISTS shape_points;
+  DROP TABLE IF EXISTS vehicle_assignments;
   DROP TABLE IF EXISTS trips;
   DROP TABLE IF EXISTS stops;
   DROP TABLE IF EXISTS routes;
@@ -89,6 +97,17 @@ const SCHEMA_SQL = `
     shape_id TEXT NOT NULL,
     headsign TEXT NOT NULL,
     direction_id INTEGER NOT NULL CHECK (direction_id IN (0, 1))
+  ) STRICT;
+
+  CREATE TABLE vehicle_assignments (
+    trip_id TEXT PRIMARY KEY REFERENCES trips(id),
+    vehicle_series TEXT,
+    display_name TEXT,
+    confidence TEXT NOT NULL CHECK (confidence IN ('confirmed', 'expected', 'unknown')),
+    CHECK (
+      confidence = 'unknown'
+      OR (vehicle_series IS NOT NULL AND length(vehicle_series) > 0)
+    )
   ) STRICT;
 
   CREATE TABLE shape_points (
@@ -179,6 +198,35 @@ function readGtfsFile(directory: string, fileName: GtfsFileName): CsvRow[] {
   return rows;
 }
 
+function readVehicleAssignments(directory: string): CsvRow[] {
+  const filePath = resolve(directory, VEHICLE_ASSIGNMENTS_FILE);
+  if (!existsSync(filePath)) {
+    return [];
+  }
+
+  const rows = parse(readFileSync(filePath, "utf8"), {
+    bom: true,
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  }) as CsvRow[];
+  const firstRow = rows[0];
+  if (!firstRow) {
+    return [];
+  }
+
+  const missingHeaders = VEHICLE_ASSIGNMENT_HEADERS.filter(
+    (header) => !(header in firstRow),
+  );
+  if (missingHeaders.length > 0) {
+    throw new Error(
+      `${VEHICLE_ASSIGNMENTS_FILE} is missing headers: ${missingHeaders.join(", ")}`,
+    );
+  }
+
+  return rows;
+}
+
 function required(row: CsvRow, field: string, context: string): string {
   const value = row[field];
   if (value === undefined || value === "") {
@@ -219,6 +267,7 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
       readGtfsFile(gtfsDirectory, fileName),
     ]),
   ) as Record<GtfsFileName, CsvRow[]>;
+  const vehicleAssignments = readVehicleAssignments(gtfsDirectory);
 
   mkdirSync(dirname(databasePath), { recursive: true });
   const database = new Database(databasePath);
@@ -271,6 +320,31 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
           required(row, "shape_id", context),
           required(row, "trip_headsign", context),
           integer(row, "direction_id", context),
+        );
+      }
+
+      const insertVehicleAssignment = database.prepare(`
+        INSERT INTO vehicle_assignments (
+          trip_id,
+          vehicle_series,
+          display_name,
+          confidence
+        ) VALUES (?, ?, ?, ?)
+      `);
+      for (const [index, row] of vehicleAssignments.entries()) {
+        const context = `${VEHICLE_ASSIGNMENTS_FILE} row ${index + 2}`;
+        const confidence = required(row, "confidence", context);
+        if (!["confirmed", "expected", "unknown"].includes(confidence)) {
+          throw new Error(
+            `${context}: confidence must be confirmed, expected, or unknown`,
+          );
+        }
+
+        insertVehicleAssignment.run(
+          required(row, "trip_id", context),
+          row.vehicle_series || null,
+          row.display_name || null,
+          confidence,
         );
       }
 
@@ -369,6 +443,7 @@ function importGtfs(gtfsDirectory: string, databasePath: string) {
         SELECT 'routes' AS table_name, COUNT(*) AS row_count FROM routes
         UNION ALL SELECT 'stops', COUNT(*) FROM stops
         UNION ALL SELECT 'trips', COUNT(*) FROM trips
+        UNION ALL SELECT 'vehicle_assignments', COUNT(*) FROM vehicle_assignments
         UNION ALL SELECT 'stop_times', COUNT(*) FROM stop_times
         UNION ALL SELECT 'shape_points', COUNT(*) FROM shape_points
         UNION ALL SELECT 'service_calendars', COUNT(*) FROM service_calendars

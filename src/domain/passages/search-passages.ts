@@ -5,6 +5,7 @@ import {
   estimateTripPassage,
   type PassageStopTime,
 } from "@/domain/passages/estimate-trip-passage";
+import type { VehicleAssignment } from "@/domain/vehicles/vehicle-assignment";
 
 export type PassageTripCandidate = {
   routeId: string;
@@ -16,6 +17,7 @@ export type PassageTripCandidate = {
   directionId: number;
   shapeCoordinates: Position[];
   stopTimes: PassageStopTime[];
+  vehicleAssignment: VehicleAssignment | null;
 };
 
 export type PassageListItem = {
@@ -30,6 +32,7 @@ export type PassageListItem = {
   isEstimated: true;
   previousStopId: string;
   nextStopId: string;
+  vehicleAssignment: VehicleAssignment | null;
 };
 
 type PassageSearchInput = {
@@ -105,6 +108,7 @@ export function searchPassages({
       isEstimated: true,
       previousStopId: estimate.previousStopId,
       nextStopId: estimate.nextStopId,
+      vehicleAssignment: candidate.vehicleAssignment,
     });
   }
 

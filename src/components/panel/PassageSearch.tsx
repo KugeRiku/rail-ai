@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { SelectedRailPoint } from "@/domain/geo/snap-to-shape";
 import type { PassageListItem } from "@/domain/passages/search-passages";
+import { formatVehicleAssignment } from "@/domain/vehicles/vehicle-assignment";
 import { TripDetailPanel } from "./TripDetailPanel";
 import styles from "./SidePanel.module.css";
 
@@ -191,6 +192,9 @@ export function PassageSearch({
                   <strong>{passage.headsign}方面</strong>
                   <span>
                     {passage.routeName} · {passage.tripId}
+                  </span>
+                  <span className={styles.vehicleInfo}>
+                    {formatVehicleAssignment(passage.vehicleAssignment)}
                   </span>
                 </div>
                 <span className={styles.estimateBadge}>推定</span>

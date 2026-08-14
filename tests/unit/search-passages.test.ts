@@ -55,6 +55,15 @@ function candidate(
     directionId: direction,
     shapeCoordinates: direction === 0 ? OUTBOUND_SHAPE : INBOUND_SHAPE,
     stopTimes: stops(startSeconds, endSeconds, direction),
+    vehicleAssignment:
+      tripId === "TRIP_A"
+        ? {
+            tripId,
+            vehicleSeries: "Series-A",
+            displayName: "特急車両A",
+            confidence: "confirmed",
+          }
+        : null,
   };
 }
 
@@ -88,6 +97,12 @@ describe("searchPassages", () => {
         isEstimated: true,
         previousStopId: "STOP_A",
         nextStopId: "STOP_B",
+        vehicleAssignment: {
+          tripId: "TRIP_A",
+          vehicleSeries: "Series-A",
+          displayName: "特急車両A",
+          confidence: "confirmed",
+        },
       },
     ]);
   });
