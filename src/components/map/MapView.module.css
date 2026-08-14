@@ -6,6 +6,7 @@
 
 .root {
   isolation: isolate;
+  overflow: hidden;
 }
 
 .map {

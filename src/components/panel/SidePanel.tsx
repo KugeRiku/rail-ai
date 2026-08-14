@@ -1,4 +1,5 @@
 import type { SelectedRailPoint } from "@/domain/geo/snap-to-shape";
+import { PassageSearch } from "./PassageSearch";
 import styles from "./SidePanel.module.css";
 
 type SidePanelProps = {
@@ -49,6 +50,7 @@ export function SidePanel({ selection }: SidePanelProps) {
               <dd>{formatDistance(selection.totalShapeDistance)}</dd>
             </div>
           </dl>
+          <PassageSearch selection={selection} />
         </div>
       ) : (
         <div className={styles.emptyState}>
@@ -66,7 +68,7 @@ export function SidePanel({ selection }: SidePanelProps) {
       <div className={styles.notice}>
         <span className={styles.noticeLine} aria-hidden="true" />
         <p>
-          現在は地点選択まで対応しています。列車時刻の計算は後続フェーズで追加します。
+          通過時刻は駅間距離から求めた推定値です。実際の運行時刻とは異なる場合があります。
         </p>
       </div>
     </aside>

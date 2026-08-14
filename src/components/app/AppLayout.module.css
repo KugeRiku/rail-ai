@@ -1,5 +1,8 @@
 .shell {
-  min-height: 100dvh;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
   display: grid;
   grid-template-rows: 72px minmax(0, 1fr);
   overflow: hidden;
@@ -64,28 +67,29 @@
 }
 
 .workspace {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(320px, 3fr);
+  overflow: hidden;
 }
 
 .mapArea {
+  width: 100%;
+  height: 100%;
   min-width: 0;
   min-height: 0;
   position: relative;
+  overflow: hidden;
   background: #dce7e3;
 }
 
 @media (max-width: 820px) {
-  .shell {
-    min-height: 100dvh;
-    height: auto;
-    overflow: visible;
-  }
-
   .workspace {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(440px, 62dvh) auto;
+    grid-template-rows: minmax(300px, 62%) minmax(0, 1fr);
   }
 }
 

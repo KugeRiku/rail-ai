@@ -31,3 +31,11 @@ export function formatServiceTimeHHMM(elapsedSeconds: number): string {
 
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
+
+export function serviceTimeHHMMToSeconds(value: string): number {
+  if (!/^\d{1,3}:[0-5]\d$/.test(value)) {
+    throw new Error(`Invalid service-day time: ${value}`);
+  }
+
+  return gtfsTimeToSeconds(`${value}:00`);
+}
