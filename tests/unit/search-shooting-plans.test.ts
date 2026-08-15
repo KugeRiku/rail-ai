@@ -3,10 +3,13 @@ import type { PassageTripCandidate } from "@/domain/passages/search-passages";
 import { searchShootingPlans } from "@/domain/planner/search-shooting-plans";
 import type { ShootingSpot } from "@/domain/shooting-spots/shooting-spot";
 
+const MAX_EXPECTED_LIGHTING_BONUS = 5;
+
 function spot(
   id: string,
   walkMinutes = 5,
   safetyStatus: ShootingSpot["safetyStatus"] = "approved",
+  cameraBearing = 270,
 ): ShootingSpot {
   return {
     id,
@@ -15,7 +18,7 @@ function spot(
     longitude: 139.005,
     nearestStation: "中間駅",
     walkMinutes,
-    cameraBearing: 270,
+    cameraBearing,
     notes: "テスト用の登録地点",
     safetyStatus,
   };
@@ -79,6 +82,7 @@ function search(
     startSeconds: 43_200,
     endSeconds: 64_800,
     maxWalkMinutes: 10,
+    serviceDate: "2026-08-15",
     maxDistanceMeters: 250,
     activeServiceIds: new Set(["ACTIVE"]),
     spots: [spot("A")],
@@ -103,6 +107,7 @@ describe("searchShootingPlans", () => {
         confidence: "confirmed",
       },
       walkMinutes: 5,
+      cameraBearing: 270,
       score: 93,
     });
     expect(result[0].scoreReasons).toEqual([
@@ -171,6 +176,32 @@ describe("searchShootingPlans", () => {
       ["FAR", "CONFIRMED"],
       ["FAR", "EXPECTED"],
     ]);
+  });
+
+  it("only adds a small lighting bonus when good lighting is requested", () => {
+    const spots = [
+      spot("FRONT_LIT", 5, "approved", 0),
+      spot("BACK_LIT", 5, "approved", 180),
+    ];
+    const withoutPreference = search({ spots });
+    const withPreference = search({ spots, lightingPreference: "good" });
+
+    expect(withoutPreference.map((candidate) => candidate.score)).toEqual([
+      93, 93,
+    ]);
+    expect(withoutPreference[0].scoreReasons).not.toEqual(
+      expect.arrayContaining([expect.stringContaining("光線条件")]),
+    );
+    expect(withPreference[0].spot.id).toBe("FRONT_LIT");
+    expect(withPreference[0].lightingScore).toBeGreaterThan(
+      withPreference[1].lightingScore,
+    );
+    expect(withPreference[0].score - 93).toBeLessThanOrEqual(
+      MAX_EXPECTED_LIGHTING_BONUS,
+    );
+    expect(withPreference[0].scoreReasons).toEqual(
+      expect.arrayContaining([expect.stringContaining("光線条件は")]),
+    );
   });
 
   it("preserves service-day times after 24:00", () => {

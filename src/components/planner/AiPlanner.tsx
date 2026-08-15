@@ -109,6 +109,7 @@ export function AiPlanner({
           startTime: parsedConditions.startTime,
           endTime: parsedConditions.endTime,
           maxWalkMinutes: parsedConditions.maxWalkMinutes,
+          lightingPreference: parsedConditions.lightingPreference ?? undefined,
         }),
       });
       const plannerBody = (await plannerResponse.json()) as
@@ -209,6 +210,12 @@ export function AiPlanner({
                   : `${conditions.maxWalkMinutes}分以内`}
               </dd>
             </div>
+            {conditions.lightingPreference && (
+              <div>
+                <dt>光線</dt>
+                <dd>良好な候補を優先</dd>
+              </div>
+            )}
           </dl>
         </div>
       )}
@@ -222,6 +229,9 @@ export function AiPlanner({
             <h3>おすすめ撮影地点</h3>
             <span>{candidates.length}件</span>
           </div>
+          <p className={styles.lightingNotice}>
+            光線評価は太陽位置と撮影方向から算出した簡易的な参考指標です。現地の建物や天候は反映していません。
+          </p>
           <ol className={styles.planList}>
             {candidates.map((candidate) => {
               const key = candidateKey(candidate);
@@ -249,6 +259,17 @@ export function AiPlanner({
                     <p>
                       最寄駅：{candidate.spot.nearestStation} · 徒歩
                       {candidate.walkMinutes}分
+                    </p>
+                    <p className={styles.lightingSummary}>
+                      光線：
+                      <strong data-lighting-label={candidate.lightingLabel}>
+                        {candidate.lightingLabel}
+                      </strong>
+                      <span>
+                        太陽 方位{candidate.sunAzimuth.toFixed(1)}°・高度
+                        {candidate.sunAltitude.toFixed(1)}°／撮影方向
+                        {candidate.cameraBearing.toFixed(1)}°
+                      </span>
                     </p>
                     <p className={styles.recommendationReason}>
                       <strong>おすすめ理由：</strong>

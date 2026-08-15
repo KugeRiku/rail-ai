@@ -191,6 +191,16 @@
   font-weight: 800;
 }
 
+.lightingNotice {
+  margin-top: 9px;
+  padding: 9px 10px;
+  border-left: 2px solid rgba(255, 176, 0, 0.55);
+  background: rgba(255, 176, 0, 0.06);
+  color: #aebfb9;
+  font-size: 0.59rem;
+  line-height: 1.55;
+}
+
 .planList {
   display: grid;
   gap: 9px;
@@ -289,6 +299,30 @@
 .planCard .recommendationReason {
   margin-top: 9px;
   color: #d1e1dc;
+}
+
+.planCard .lightingSummary {
+  margin-top: 9px;
+}
+
+.lightingSummary strong {
+  margin-right: 5px;
+  color: #ffd681;
+}
+
+.lightingSummary strong[data-lighting-label="良好"] {
+  color: #75e1c7;
+}
+
+.lightingSummary strong[data-lighting-label="厳しい"] {
+  color: #ffc4b6;
+}
+
+.lightingSummary span {
+  display: block;
+  margin-top: 2px;
+  color: #879e96;
+  font-size: 0.58rem;
 }
 
 .recommendationReason strong {

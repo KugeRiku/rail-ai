@@ -1,5 +1,9 @@
 import type { PassageTripCandidate } from "@/domain/passages/search-passages";
 import { searchPassages } from "@/domain/passages/search-passages";
+import {
+  evaluateSolarLighting,
+  type LightingLabel,
+} from "@/domain/lighting/solar-lighting";
 import type { ShootingSpot } from "@/domain/shooting-spots/shooting-spot";
 import type { VehicleAssignment } from "@/domain/vehicles/vehicle-assignment";
 
@@ -18,6 +22,11 @@ export type ShootingPlanCandidate = {
   isEstimated: true;
   vehicle: VehicleAssignment | null;
   walkMinutes: number;
+  sunAzimuth: number;
+  sunAltitude: number;
+  cameraBearing: number;
+  lightingScore: number;
+  lightingLabel: LightingLabel;
   score: number;
   scoreReasons: string[];
 };
@@ -28,6 +37,8 @@ type ShootingPlanSearchInput = {
   startSeconds: number;
   endSeconds: number;
   maxWalkMinutes: number;
+  serviceDate: string;
+  lightingPreference?: "good";
   maxDistanceMeters: number;
   activeServiceIds: ReadonlySet<string>;
   spots: ShootingSpot[];
@@ -39,6 +50,7 @@ const TIME_SCORE = 40;
 const TARGET_SCORE = 20;
 const MAX_WALK_SCORE = 30;
 const MIN_WALK_SCORE = 15;
+const MAX_LIGHTING_BONUS = 5;
 
 function calculateWalkScore(walkMinutes: number, maxWalkMinutes: number) {
   if (maxWalkMinutes === 0) {
@@ -78,6 +90,8 @@ export function searchShootingPlans({
   startSeconds,
   endSeconds,
   maxWalkMinutes,
+  serviceDate,
+  lightingPreference,
   maxDistanceMeters,
   activeServiceIds,
   spots,
@@ -120,6 +134,19 @@ export function searchShootingPlans({
         maxWalkMinutes,
       );
       const vehicleConfidenceScore = confidenceScore(trip.vehicleAssignment);
+      const lighting = evaluateSolarLighting({
+        serviceDate,
+        serviceSeconds: passage.estimatedSeconds,
+        latitude: spot.latitude,
+        longitude: spot.longitude,
+        cameraBearing: spot.cameraBearing,
+      });
+      const lightingBonus =
+        lightingPreference === "good"
+          ? Math.round(
+              (lighting.lightingScore / 100) * MAX_LIGHTING_BONUS,
+            )
+          : 0;
       const scoreReasons = [
         `指定時間帯に通過（+${TIME_SCORE}）`,
         vehicleSeries
@@ -134,6 +161,11 @@ export function searchShootingPlans({
         scoreReasons.push(`車両形式は予定情報（+${vehicleConfidenceScore}）`);
       } else {
         scoreReasons.push("車両形式の確度加点なし（+0）");
+      }
+      if (lightingPreference === "good") {
+        scoreReasons.push(
+          `光線条件は${lighting.lightingLabel}（+${lightingBonus}）`,
+        );
       }
 
       candidates.push({
@@ -151,8 +183,13 @@ export function searchShootingPlans({
         isEstimated: true,
         vehicle: trip.vehicleAssignment,
         walkMinutes: spot.walkMinutes,
+        ...lighting,
         score:
-          TIME_SCORE + TARGET_SCORE + walkScore + vehicleConfidenceScore,
+          TIME_SCORE +
+          TARGET_SCORE +
+          walkScore +
+          vehicleConfidenceScore +
+          lightingBonus,
         scoreReasons,
       });
     }

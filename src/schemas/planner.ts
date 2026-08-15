@@ -30,6 +30,7 @@ export const plannerSearchRequestSchema = z
     startTime: serviceTime,
     endTime: serviceTime,
     maxWalkMinutes: z.number().int().min(0).max(180),
+    lightingPreference: z.enum(["good"]).optional(),
   })
   .strict()
   .refine((value) => Boolean(value.vehicleSeries) || Boolean(value.tripId), {

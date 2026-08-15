@@ -78,6 +78,8 @@ export async function POST(request: Request) {
       startSeconds,
       endSeconds,
       maxWalkMinutes: parsed.data.maxWalkMinutes,
+      serviceDate: parsed.data.date,
+      lightingPreference: parsed.data.lightingPreference,
       maxDistanceMeters: MAX_DISTANCE_METERS,
       activeServiceIds,
       spots,
