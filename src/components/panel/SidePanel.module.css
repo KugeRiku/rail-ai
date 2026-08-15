@@ -134,6 +134,54 @@
   color: #aee9da;
 }
 
+.fallbackBox {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 176, 0, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 176, 0, 0.07);
+}
+
+.fallbackBox > strong {
+  color: #ffd681;
+  font-size: 0.7rem;
+}
+
+.fallbackBox p {
+  margin-top: 4px;
+  color: #c7b998;
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+.fallbackBox button {
+  width: 100%;
+  margin-top: 9px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 214, 129, 0.35);
+  border-radius: 7px;
+  background: rgba(255, 176, 0, 0.12);
+  color: #ffe3a8;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fallbackBox button:focus-visible {
+  outline: 2px solid #ffd681;
+  outline-offset: 2px;
+}
+
+.fallbackBanner {
+  margin-top: 12px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: rgba(255, 176, 0, 0.12);
+  color: #ffd681;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .understoodConditions {
   margin-top: 16px;
   padding: 13px;

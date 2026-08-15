@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import {
+  DEMO_AI_INPUT,
+  DEMO_FALLBACK_CONDITIONS,
+} from "@/config/demo";
 import type { ShootingPlanCandidate } from "@/domain/planner/search-shooting-plans";
 import { buildRecommendationText } from "@/domain/planner/recommendation";
 import type { StructuredSearchConditions } from "@/schemas/ai-request";
@@ -25,9 +29,6 @@ type AiPlannerProps = {
   onCandidateSelect: (candidate: ShootingPlanCandidate | null) => void;
 };
 
-const EXAMPLE_TEXT =
-  "明日の午後にSeries-Aを撮りたい。駅から10分以内がいい";
-
 function formatDate(isoDate: string): string {
   const [, month, day] = isoDate.split("-");
   return `${Number(month)}月${Number(day)}日`;
@@ -41,63 +42,18 @@ export function AiPlanner({
   selectedCandidate,
   onCandidateSelect,
 }: AiPlannerProps) {
-  const [text, setText] = useState(EXAMPLE_TEXT);
+  const [text, setText] = useState(DEMO_AI_INPUT);
   const [status, setStatus] = useState<PlannerStatus>("idle");
   const [conditions, setConditions] =
     useState<StructuredSearchConditions | null>(null);
   const [candidates, setCandidates] = useState<ShootingPlanCandidate[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fallbackAvailable, setFallbackAvailable] = useState(false);
+  const [fallbackMode, setFallbackMode] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setStatus("parsing");
-    setConditions(null);
-    setCandidates([]);
-    setErrorMessage(null);
-    onCandidateSelect(null);
-
-    let parsedConditions: StructuredSearchConditions;
-    try {
-      const parseResponse = await fetch("/api/ai/parse-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      const parsedBody = (await parseResponse.json()) as
-        | StructuredSearchConditions
-        | ApiError;
-      if (!parseResponse.ok) {
-        const errorBody = parsedBody as ApiError;
-        if (errorBody.conditions) {
-          setConditions(errorBody.conditions);
-        }
-        throw new Error(
-          errorBody.error?.message ?? "自然言語を解析できませんでした。",
-        );
-      }
-
-      parsedConditions = parsedBody as StructuredSearchConditions;
-      if (
-        (!parsedConditions.vehicleSeries && !parsedConditions.tripId) ||
-        !parsedConditions.date ||
-        !parsedConditions.startTime ||
-        !parsedConditions.endTime ||
-        parsedConditions.maxWalkMinutes === null
-      ) {
-        throw new Error("撮影プラン検索に必要な条件が不足しています。");
-      }
-      setConditions(parsedConditions);
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "自然言語を解析できませんでした。",
-      );
-      setStatus("ai-error");
-      return;
-    }
-
+  async function searchPlans(parsedConditions: StructuredSearchConditions) {
     setStatus("searching");
+    setErrorMessage(null);
     try {
       const plannerResponse = await fetch("/api/planner/search", {
         method: "POST",
@@ -133,6 +89,74 @@ export function AiPlanner({
       );
       setStatus("planner-error");
     }
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("parsing");
+    setConditions(null);
+    setCandidates([]);
+    setErrorMessage(null);
+    setFallbackAvailable(false);
+    setFallbackMode(false);
+    onCandidateSelect(null);
+
+    let parsedConditions: StructuredSearchConditions;
+    try {
+      const parseResponse = await fetch("/api/ai/parse-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const parsedBody = (await parseResponse.json()) as
+        | StructuredSearchConditions
+        | ApiError;
+      if (!parseResponse.ok) {
+        const errorBody = parsedBody as ApiError;
+        if (errorBody.conditions) {
+          setConditions(errorBody.conditions);
+        }
+        const isAiServiceFailure = Boolean(
+          errorBody.error?.code?.startsWith("AI_") &&
+            errorBody.error.code !== "AI_INVALID_REQUEST",
+        );
+        setFallbackAvailable(isAiServiceFailure);
+        throw new Error(
+          isAiServiceFailure
+            ? "AI撮影プランナーに接続できませんでした。地図と列車検索は引き続き利用できます。"
+            : errorBody.error?.message ?? "自然言語を解析できませんでした。",
+        );
+      }
+
+      parsedConditions = parsedBody as StructuredSearchConditions;
+      if (
+        (!parsedConditions.vehicleSeries && !parsedConditions.tripId) ||
+        !parsedConditions.date ||
+        !parsedConditions.startTime ||
+        !parsedConditions.endTime ||
+        parsedConditions.maxWalkMinutes === null
+      ) {
+        throw new Error("撮影プラン検索に必要な条件が不足しています。");
+      }
+      setConditions(parsedConditions);
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        setFallbackAvailable(true);
+      } else if (error instanceof TypeError) {
+        setFallbackAvailable(true);
+      }
+      setErrorMessage(
+        error instanceof TypeError
+          ? "AI撮影プランナーに接続できませんでした。地図と列車検索は引き続き利用できます。"
+          : error instanceof Error
+            ? error.message
+            : "AI撮影プランナーに接続できませんでした。地図と列車検索は引き続き利用できます。",
+      );
+      setStatus("ai-error");
+      return;
+    }
+
+    await searchPlans(parsedConditions);
   }
 
   const busy = status === "parsing" || status === "searching";
@@ -171,6 +195,30 @@ export function AiPlanner({
         </p>
       )}
 
+      {fallbackAvailable && status === "ai-error" && (
+        <div className={styles.fallbackBox}>
+          <strong>デモ緊急用フォールバック</strong>
+          <p>OrcaRouterを使わず、事前定義した条件で検索します。</p>
+          <button
+            type="button"
+            onClick={() => {
+              setFallbackAvailable(false);
+              setFallbackMode(true);
+              setConditions(DEMO_FALLBACK_CONDITIONS);
+              void searchPlans(DEMO_FALLBACK_CONDITIONS);
+            }}
+          >
+            事前定義条件で検索（AI未使用）
+          </button>
+        </div>
+      )}
+
+      {fallbackMode && (
+        <p className={styles.fallbackBanner} role="status">
+          デモ緊急モード：OrcaRouterは使用していません
+        </p>
+      )}
+
       {status === "parsing" && (
         <p className={styles.aiProgress} role="status">
           OrcaRouterで撮影条件を解析しています…
@@ -184,7 +232,11 @@ export function AiPlanner({
 
       {conditions && (
         <div className={styles.understoodConditions}>
-          <h3>AIが理解した条件</h3>
+          <h3>
+            {fallbackMode
+              ? "事前定義した検索条件（AI未使用）"
+              : "AIが理解した条件"}
+          </h3>
           <dl>
             <div>
               <dt>対象</dt>
