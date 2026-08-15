@@ -13,6 +13,7 @@ import type {
   RouteMapData,
   RouteSummary,
 } from "@/domain/gtfs/map-data";
+import type { ShootingPlanCandidate } from "@/domain/planner/search-shooting-plans";
 import type { ShootingSpot } from "@/domain/shooting-spots/shooting-spot";
 import styles from "./MapView.module.css";
 
@@ -23,6 +24,7 @@ type ShootingSpotsResponse = { shootingSpots: ShootingSpot[] };
 
 type MapViewProps = {
   highlightedShapeId: string | null;
+  selectedPlanCandidate: ShootingPlanCandidate | null;
   onSelection: (selection: SelectedRailPoint) => void;
 };
 
@@ -233,6 +235,39 @@ async function loadShootingSpotsData(
     "selected-rail-point-halo",
   );
 
+  map.addSource("selected-planner-spot", {
+    type: "geojson",
+    data: { type: "FeatureCollection", features: [] },
+  });
+  map.addLayer(
+    {
+      id: "selected-planner-spot-halo",
+      type: "circle",
+      source: "selected-planner-spot",
+      paint: {
+        "circle-radius": 18,
+        "circle-color": "rgba(255, 176, 0, 0.26)",
+        "circle-stroke-color": "rgba(255, 255, 255, 0.94)",
+        "circle-stroke-width": 3,
+      },
+    },
+    "selected-rail-point-halo",
+  );
+  map.addLayer(
+    {
+      id: "selected-planner-spot-core",
+      type: "circle",
+      source: "selected-planner-spot",
+      paint: {
+        "circle-radius": 8,
+        "circle-color": "#ffb000",
+        "circle-stroke-color": "#563c00",
+        "circle-stroke-width": 2,
+      },
+    },
+    "selected-rail-point-halo",
+  );
+
   map.on("click", "approved-shooting-spots", (event) => {
     const properties = event.features?.[0]?.properties;
     if (!properties || typeof properties.name !== "string") {
@@ -256,7 +291,11 @@ async function loadShootingSpotsData(
   return shootingSpots.length;
 }
 
-export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
+export function MapView({
+  highlightedShapeId,
+  selectedPlanCandidate,
+  onSelection,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [status, setStatus] = useState<MapStatus>("loading");
@@ -489,6 +528,42 @@ export function MapView({ highlightedShapeId, onSelection }: MapViewProps) {
       showShootingSpots ? "visible" : "none",
     );
   }, [showShootingSpots, status]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const source = map?.getSource(
+      "selected-planner-spot",
+    ) as maplibregl.GeoJSONSource | undefined;
+    if (!map || !source) {
+      return;
+    }
+
+    if (!selectedPlanCandidate) {
+      source.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+
+    source.setData({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [
+          selectedPlanCandidate.spot.longitude,
+          selectedPlanCandidate.spot.latitude,
+        ],
+      },
+      properties: { spotId: selectedPlanCandidate.spot.id },
+    });
+    map.flyTo({
+      center: [
+        selectedPlanCandidate.spot.longitude,
+        selectedPlanCandidate.spot.latitude,
+      ],
+      zoom: Math.max(map.getZoom(), 14),
+      duration: 700,
+      essential: true,
+    });
+  }, [selectedPlanCandidate, status]);
 
   const retry = () => {
     setStatus("loading");

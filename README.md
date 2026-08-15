@@ -39,12 +39,12 @@ ORCAROUTER_API_KEY=your_api_key_here
 
 `.env.local` はGit管理対象外です。実際のAPIキーを `.env.example` やソースコードへ記載しないでください。
 
-将来のAI機能では、OrcaRouterをOpenAI互換APIとして次の設定で利用する予定です。
+AI自然言語解析では、OrcaRouterをOpenAI互換APIとして次の設定で利用します。
 
 - Base URL: `https://api.orcarouter.ai/v1`
 - Model: `orcarouter/auto`
 
-現在はOrcaRouterへのAPI呼び出しを実装していません。
+呼び出しはサーバー側の `POST /api/ai/parse-request` からだけ行い、APIキーをブラウザへ送りません。
 
 ## 地図の初期表示設定
 
@@ -68,12 +68,14 @@ ORCAROUTER_API_KEY=your_api_key_here
 - `GET /api/shooting-spots`による承認済み撮影候補地点の取得
 - 承認済み撮影地点3件と、初期非表示の地図マーカー切替
 - `POST /api/planner/search`による車両・列車、営業日、時間帯、徒歩条件の決定的な撮影プラン検索
+- `POST /api/ai/parse-request`によるOrcaRouter経由の自然言語から検索条件への変換
+- AIが理解した条件と、決定的検索エンジンによる撮影候補を表示する入力パネル
 - 路線一覧・路線shape API
 - `MapView`、`SidePanel`、`AppLayout` のコンポーネント分割
 - 地図とページの最低限のLoading / Error表示
 - 狭い画面で縦並びになる最低限のレスポンシブ対応
 
-AI撮影プランナー、OrcaRouter API呼び出しは未実装です。
+AIは検索条件の構造化だけを担当し、ダイヤ、距離、通過時刻、撮影地点、スコアは既存の決定的ロジックで処理します。LLMによる推薦理由生成は未実装です。
 
 ## 品質確認
 

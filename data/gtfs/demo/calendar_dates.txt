@@ -1,3 +1,4 @@
 service_id,date,exception_type
 WEEKDAY,20260815,1
+WEEKDAY,20260816,1
 WEEKDAY,20260817,2

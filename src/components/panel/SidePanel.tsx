@@ -1,9 +1,13 @@
 import type { SelectedRailPoint } from "@/domain/geo/snap-to-shape";
+import type { ShootingPlanCandidate } from "@/domain/planner/search-shooting-plans";
+import { AiPlanner } from "@/components/planner/AiPlanner";
 import { PassageSearch } from "./PassageSearch";
 import styles from "./SidePanel.module.css";
 
 type SidePanelProps = {
   selection: SelectedRailPoint | null;
+  selectedPlanCandidate: ShootingPlanCandidate | null;
+  onPlanCandidateSelect: (candidate: ShootingPlanCandidate | null) => void;
   onTripShapeChange: (shapeId: string | null) => void;
 };
 
@@ -13,13 +17,23 @@ function formatDistance(distanceMeters: number): string {
     : `${Math.round(distanceMeters)} m`;
 }
 
-export function SidePanel({ selection, onTripShapeChange }: SidePanelProps) {
+export function SidePanel({
+  selection,
+  selectedPlanCandidate,
+  onPlanCandidateSelect,
+  onTripShapeChange,
+}: SidePanelProps) {
   return (
     <aside className={styles.panel} aria-labelledby="side-panel-title">
       <div className={styles.panelHeader}>
         <p className={styles.eyebrow}>撮影情報</p>
         <span className={styles.status}>{selection ? "選択済み" : "地点未選択"}</span>
       </div>
+
+      <AiPlanner
+        selectedCandidate={selectedPlanCandidate}
+        onCandidateSelect={onPlanCandidateSelect}
+      />
 
       {selection ? (
         <div className={styles.selection}>
